@@ -1,0 +1,137 @@
+---
+title: "Project on ricci data"
+author: "Dean Nasa 209381367"
+date: "28 9 2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+In this project I analyzed the "RICCI" DATA - Data on firefighter promotion exams as part of the Ricci vs DeStafano court case to find if there is any racial discrimination between 3 types of firefighters (whites, Hispanics, blacks).
+
+We would like to know if the expected weighted score (Combined) is different
+between the position groups (Position) and the race (Race).
+I Checked this using two-way analysis of variance, with integration 
+(only if there is evidence in the data that it is needed).
+
+*all tests were conducted with 0.05 confidence
+```{r}
+library(lawstat)
+library(Stat2Data)
+library(multcomp)
+library(ggpubr)
+library(rstatix)
+library(tidyverse)
+data(Ricci)
+str(Ricci)
+
+lm1 <- lm(Combine ~ Race*Position, Ricci)
+# check to see if the data is ready 
+
+# Normality of errors
+plot(lm1)
+
+# Heteroscedasticity
+
+boxplot(Combine ~ Race*Position, Ricci)
+
+# check for us - variance equality 
+
+levene.test(Ricci$Combine, interaction(Ricci$Position ,Ricci$Race), location = "mean")
+
+# check if the groups are balanced
+
+table(Ricci$Position, Ricci$Race)
+
+#we can see that the table is not balanced
+
+
+#means of combination of groups
+
+sum_of_groub_ab <- function(a,b){
+  c <-0
+  for(i in 1:length(Ricci$Race)){
+    if((Ricci$Race[i] == a)&(Ricci$Position[i]== b)) {
+      c<- c+1
+    }
+  }
+  return(c)
+}
+
+
+mean_of_groub_ab <- function(a,b){
+  s <-0
+  for(i in 1:length(Ricci$Race)){
+    if((Ricci$Race[i] == a)&(Ricci$Position[i]== b)) {
+      s<- s +Ricci$Combine[i]
+    }
+  }
+  return(s/sum_of_groub_ab(a,b))
+}
+
+
+mean(Ricci$Combine)
+mean_of_groub_ab('W',"Captain")
+mean_of_groub_ab('W',"Lieutenant")
+mean_of_groub_ab('B',"Captain")
+mean_of_groub_ab('B',"Lieutenant")
+mean_of_groub_ab('H',"Captain")
+mean_of_groub_ab('H',"Lieutenant")
+
+aov_ric <-aov(Combine ~ Position * Race, data = Ricci)
+summary(aov_ric)
+
+# Only the race factor is significance.
+
+# post hoc analysis
+
+#bonforroni correction
+pairwise <- glht(aov_ric, linfct = mcp(Race = 'Tukey'))
+summary(pairwise, test = adjusted(type = "bonf"))
+
+#tokey correction
+tukey_hsd(aov_ric)
+
+
+aov_ric2 <- aov(Combine ~ Race, data = Ricci)
+summary(aov_ric2)
+
+# We can see that the difference between Black and Hispanic is not significance.
+
+
+```
+
+In the above we focused on the sub-sample of the observations for which Lieutenant = Position holds and checked whether there is evidence that the assumption - Equality of differences does not hold for the weighted score (Combined) between the race groups. now I will perform a one-way analysis of variance and then also post hoc analyses.
+```{r}
+library(knitr)
+library(lawstat)
+library(Stat2Data)
+library(dplyr)
+data(Ricci)
+str(Ricci)
+Ricci_l <- Ricci[Ricci$Position == "Lieutenant",]
+aov_l<-aov(Ricci_l$Combine~Ricci_l$Race)
+
+# one-way analysis of variance examining whether in this sub-sample, Combined differs between the race groups
+
+
+# pairwise comparison with bonferroni correction
+
+pairwise.t.test(Ricci_l$Combine,Ricci_l$Race, p.adjust.method="bonferroni")
+
+# we will reject h0 for white and black
+
+# anova with tokey correction
+
+TukeyHSD(aov(lm(Ricci_l$Combine ~ Ricci_l$Race)))
+# we will reject h0 for white and black
+
+
+# From the results in this part we concluded that there is discrimination against blacks in comparison to Whites
+
+```
+
+
+I can see that there is a difference between blacks, Hispanics and whites. and there is a difference between whites and blacks and there is a difference between whites and Hispanics. However there can be other explanations (for example, they come from different neighborhoods with different schools).
+
+To conclude there is no doubt that there is a big problem with firefighter promotion exams. we cannot say precisely what is the source of the problem but the test discriminates hispanics and blacks in favor of the whites.
