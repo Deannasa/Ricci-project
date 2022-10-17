@@ -26,6 +26,8 @@ library(tidyverse)
 data(Ricci)
 str(Ricci)
 
+
+
 lm1 <- lm(Combine ~ Race*Position, Ricci)
 # check to see if the data is ready 
 
