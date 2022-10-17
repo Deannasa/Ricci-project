@@ -7,7 +7,6 @@ output:
   html_document: default
 ---
 
-
 In this project I analyzed the "RICCI" DATA - Data on firefighter promotion exams as part of the Ricci vs DeStafano court case to find if there is any racial discrimination between 3 types of firefighters (whites, Hispanics, blacks).
 
 We would like to know if the expected weighted score (Combined) is different
@@ -33,8 +32,6 @@ lm1 <- lm(Combine ~ Race*Position, Ricci)
 
 # Normality of errors
 plot(lm1)
-
-print("hello world!")
 
 # Heteroscedasticity
 
@@ -102,7 +99,6 @@ aov_ric2 <- aov(Combine ~ Race, data = Ricci)
 summary(aov_ric2)
 
 # We can see that the difference between Black and Hispanic is not significance.
-
 
 ```
 
